@@ -4,6 +4,9 @@
 import sys
 import re
 
+# Memory Stack
+stack = []
+
 # Define a custom InvalidOperationException
 class InvalidOperationException(Exception):
     def __init__(self, message="Operation is not a supported operation or an operand is not an integer"):
@@ -27,6 +30,20 @@ def computeMaximum(arr):
             maximum = num
     return maximum
 
+def pushStack(instructionTokens):
+    if len(instructionTokens) != 2:
+        raise InvalidOperationException(f"invalid operation {' '.join(instructionTokens)}")
+    stack.append(instructionTokens[1])
+
+def popStack(instructionTokens):
+    if len(instructionTokens) != 1:
+        raise InvalidOperationException(f"invalid operation {' '.join(instructionTokens)}")
+    
+    if len(stack) > 0:
+        print(stack.pop())
+    else:
+        raise InvalidOperationException("invalid operation")
+
 def computeHighestPower(num, base, power=0):
     if num < base:
         return power
@@ -43,9 +60,9 @@ def decimalToBinary(num):
             binaryArray.append(1)
         else:
             if i== 0:
-                binaryArray.append(0)
-            else:
                 binaryArray.append(num)
+            else:
+                binaryArray.append(0)
     return "".join([ str(j) for j in binaryArray])
 
 def binaryToDecimal(binaryString):
@@ -54,6 +71,7 @@ def binaryToDecimal(binaryString):
     return sum([ (2**i) * binaryArray[i] for i in range(len(binaryString) - 1, -1, -1)])
         
 
+# Shifting bits
 def shiftBits(num, n):
     binaryString = decimalToBinary(num)
     firstOne = re.search(r'1', binaryString)
@@ -62,6 +80,69 @@ def shiftBits(num, n):
         return binaryToDecimal(binaryString[index:] + ("0"*n))
     else:
         return binaryToDecimal(binaryString)
+
+# Noop operation
+def noop(instructionTokens):
+    if len(instructionTokens) > 1:
+        raise InvalidOperationException(f"invalid operation {' '.join(instructionTokens)}")
+    print()
+
+# Addition operation
+def add(instructionTokens):
+    if len(instructionTokens) != 3:
+        raise InvalidOperationException(f"invalid operation {' '.join(instructionTokens)}")
+    print(eval(instructionTokens[1]) + eval(instructionTokens[2]))
+
+# Multiplication operation
+def mul(instructionTokens):
+    if len(instructionTokens) != 3:
+        raise InvalidOperationException(f"invalid operation {' '.join(instructionTokens)}")
+    print(eval(instructionTokens[1]) * eval(instructionTokens[2]))
+
+# Greater than comparison operation
+def gt(instructionTokens):
+    if len(instructionTokens) != 3:
+        raise InvalidOperationException(f"invalid operation {' '.join(instructionTokens)}")
+    if eval(instructionTokens[1]) > eval(instructionTokens[2]):
+        print("1")
+    else:
+        print("0")
+
+# Logical OR operation
+def _or(instructionTokens):
+    if len(instructionTokens) > 3:
+        raise InvalidOperationException(f"invalid operation {' '.join(instructionTokens)}")
+    if (eval(instructionTokens[1]) == 0) and (eval(instructionTokens[2]) == 0):
+        print("0")
+    else:
+        print("1")
+
+# Logical AND operation
+def nand(instructionTokens):
+    if len(instructionTokens) != 3:
+        raise InvalidOperationException(f"invalid operation {' '.join(instructionTokens)}")
+    if eval(instructionTokens[1]) == 0 or eval(instructionTokens[2]) == 0:
+        print("1")
+    else:
+        print("0")
+
+# Minimum value finder operation
+def min_operation(instructionTokens):
+    if len(instructionTokens) < 3:
+        raise InvalidOperationException(f"invalid operation {' '.join(instructionTokens)}")
+    print(computeMinimum([eval(i) for i in instructionTokens[1:]]))
+
+# Bit shifting
+def shift(instructionTokens):
+    if len(instructionTokens) != 3 or (re.match(r'-', instructionTokens[1]) is not None) or (re.match(r'-', instructionTokens[2]) is not None) or (eval(instructionTokens[1]) == 0) or (eval(instructionTokens[2]) == 0):
+        raise InvalidOperationException(f"invalid operation {' '.join(instructionTokens)}")
+    print(shiftBits(eval(instructionTokens[1]), eval(instructionTokens[2])))
+
+def push(instructionTokens):
+    if len(instructionTokens) != 2:
+        raise InvalidOperationException(f"invalid operation {' '.join(instructionTokens)}")
+    pushStack(eval(instructionTokens[1]))
+
 
 # You need to update the process function to actually handle the operations. To
 # start, it just prints out each line of the input.
@@ -88,41 +169,25 @@ def process(instruction):
                     raise InvalidOperationException(f"invalid operation {instruction}")
         
         if op == "noop":
-            if len(instructionTokens) > 1:
-                raise InvalidOperationException(f"invalid operation {instruction}")
-            print()
+            noop(instructionTokens)
         elif op == "add":
-            if len(instructionTokens) != 3:
-                raise InvalidOperationException(f"invalid operation {instruction}")
-            print(eval(instructionTokens[1]) + eval(instructionTokens[2]))
+            add(instructionTokens)
         elif op == "mul":
-            if len(instructionTokens) != 3:
-                raise InvalidOperationException(f"invalid operation {instruction}")
-            print(eval(instructionTokens[1]) * eval(instructionTokens[2]))
+            mul(instructionTokens)
         elif op == "gt":
-            if len(instructionTokens) != 3:
-                raise InvalidOperationException(f"invalid operation {instruction}")
-            if(eval(instructionTokens[1]) > eval(instructionTokens[2])):
-                print("1")
-            else:
-                print("0")
+            gt(instructionTokens)
         elif op == "or":
-            if len(instructionTokens) > 3:
-                raise InvalidOperationException(f"invalid operation {instruction}")
-            if (eval(instructionTokens[1]) == 0) and (eval(instructionTokens[1]) == 0):
-                print("0")
-            else:
-                print("1")
+            _or(instructionTokens)
         elif op == "nand":
-            print("nand")
+            nand(instructionTokens)
         elif op == "min":
-            if len(instructionTokens) < 3:
-                raise InvalidOperationException(f"invalid operation {instruction}")
-            print(computeMinimum([ eval(i) for i in instructionTokens[1:]]))
+            min_operation(instructionTokens)
         elif op == "shift":
-            if len(instructionTokens) != 3 or (re.match(r'-', instructionTokens[1]) is not None) or (re.match(r'-', instructionTokens[2]) is not None) or (eval(instructionTokens[1]) == 0) or (eval(instructionTokens[2]) == 0) :
-                raise InvalidOperationException(f"invalid operation {instruction}")
-            print(shiftBits(eval(instructionTokens[1]), eval(instructionTokens[2])))
+            shift(instructionTokens)
+        elif op == "push":
+            pushStack(instructionTokens)
+        elif op == "pop":
+            popStack(instructionTokens)
         else:
             raise InvalidOperationException(f"invalid operation {instruction}")
 
